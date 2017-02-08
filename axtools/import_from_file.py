@@ -1,3 +1,6 @@
+"""
+The tools to convert jupyter notebook .ipynb to standard .py files
+"""
 import importlib
 import notebook_extract
 
