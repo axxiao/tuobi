@@ -1,19 +1,24 @@
 """
-The tools to convert jupyter notebook .ipynb to standard .py files
+To load module dynamitically
+
+__author__ = "Alex Xiao <http://www.alexxiao.me/>"
+__date__ = "2017-02-08"
+__version__ = "0.5"
+
 """
 import importlib
 import notebook_extract
 
 import os.path
 
-DEBUG=False
+DEBUG=True
 def set_DEBUG(flg):
     DEBUG=flg
     if DEBUG:
         notebook_extract.OUT_FLAG=True
     else:
         notebook_extract.OUT_FLAG=False
-def load_module(path,module):
+def extract_py(path,module):
     extr=notebook_extract.JupyterNotebookExtract()
     if os.path.isabs(path):
         module_file_name=os.path.join(path,module)
@@ -34,4 +39,7 @@ def load_module(path,module):
         if DEBUG:
             print('Found change, converting latest',nbfname,'to',pyfname)
         extr.extract(nbfname,pyfname,True)
+def load_module(path,module):
+    extract_py(path,module)
     return importlib.import_module(module)
+extract_py('axtools/import_from_file.ipynb')

@@ -2,7 +2,7 @@
 The DB tools for Sqlite 3
 
 __author__ = "Alex Xiao <http://www.alexxiao.me/>"
-__date__ = "2016-02-08"
+__date__ = "2017-02-08"
 __version__ = "0.5"
 
 """
@@ -13,19 +13,19 @@ import collections
 #conn = sqlite3.connect(':memory:')
 sqlite3.enable_shared_cache(True)
 
-
+Column = collections.namedtuple('Column', ['name','type','nullable'])
+#set column to default nullable to false
+Column.__new__.__defaults__ = (False,)
 
 class DB:
-    def __init__(self,dbname):
+    def __init__(self,dbname,**args):
         self.conn=None
         self.DB_NAME=dbname
         self.DEBUG=True
-        self.Column = collections.namedtuple('Column', ['name','type','nullable'])
-        #set column to default nullable to false
-        self.Column.__new__.__defaults__ = (False,)
-        self.conn = sqlite3.connect(self.DB_NAME,uri=True)
+        
+        self.conn = sqlite3.connect(self.DB_NAME,**args)
 
-    def connect(self):
+    def connect(self,**args):
         #file::memory:?cache=shared to open a shared DB
         #global DB_NAME, conn
         if self.conn!=None:
@@ -33,7 +33,7 @@ class DB:
             #TBC
             if self.DEBUG:
                 print('Trying to check beforce connect')
-        self.conn = sqlite3.connect(self.DB_NAME)
+        self.conn = sqlite3.connect(self.DB_NAME,**args)
         
     def disconnect(self):
         self.conn.close()
@@ -47,33 +47,38 @@ class DB:
         Output:
             Result set: [list of named tuple]
             Row  count: Integer
-            Result Type: String data/ cmd
+            Result Type: String data/ cmd/ error
         """   
-        c = self.conn.cursor()
-        if variables!=None:
-            c.executemany(cmd,variables)
-        else:
-            c.execute(cmd)   
-        rtn=c.fetchall()
-        cnt=len(rtn)
-        rtype='data'
-        if 'select' not in cmd.lower():
-            self.conn.commit()  
-            cnt=c.rowcount
-            rtype='cmd'
-        else:
-            header=''
-            for colheader in c.description:
-                header+=colheader[0]+' '
-            RES=collections.namedtuple('Data',header.strip())
-            rtno=rtn
-            rtn=[]
-            for cur in range(0,cnt):
-                #convert to namedtuple
-                rtn.append(RES(*rtno[cur]))
-        if self.DEBUG:
-            print(cnt,'rows')
-        c.close()
+        try:
+            c = self.conn.cursor()
+            if variables!=None:
+                c.executemany(cmd,variables)
+            else:
+                c.execute(cmd)   
+            rtn=c.fetchall()
+            cnt=len(rtn)
+            rtype='data'
+            if 'select' not in cmd.lower():
+                self.conn.commit()  
+                cnt=c.rowcount
+                rtype='cmd'
+            else:
+                header=''
+                for colheader in c.description:
+                    header+=colheader[0]+' '
+                RES=collections.namedtuple('Data',header.strip())
+                rtno=rtn
+                rtn=[]
+                for cur in range(0,cnt):
+                    #convert to namedtuple
+                    rtn.append(RES(*rtno[cur]))
+            if self.DEBUG:
+                print(cnt,'rows')
+            c.close()
+        except Exception as e:
+            rtn=e
+            cnt=-1
+            rtype='error'
         return rtn,cnt,rtype
 
     def create_list_of_tuple(self,headers=[],data=[],tupletype='Data'):
@@ -110,9 +115,9 @@ class DB:
             if not col.nullable:
                 stmt+=' NOT NULL '
         stmt+=')'
-        rtn=run(stmt)
+        rtn=self.run(stmt)
         index_stmt='CREATE INDEX '+tablename+'_main_index ON '+tablename+'(id)'
-        self.run(index_stmt)
+        return self.run(index_stmt)
 
     def insert(self,tablename,headers=[], data=[]):
         """
@@ -141,5 +146,5 @@ class DB:
 
     def select(self,tablename):
         return self.run('select * from '+tablename)
-im_memory_share=DB("file:in_mem_db?mode=memory&cache=shared")
+im_memory_share=DB("file:in_mem_db?mode=memory&cache=shared",uri=True)
 
