@@ -14,8 +14,9 @@ import collections
 sqlite3.enable_shared_cache(True)
 
 Column = collections.namedtuple('Column', ['name','type','nullable'])
-#set column to default nullable to false
 Column.__new__.__defaults__ = (False,)
+
+
 
 class DB:
     def __init__(self,dbname,**args):
@@ -49,6 +50,9 @@ class DB:
             Row  count: Integer
             Result Type: String data/ cmd/ error
         """   
+
+        c=None
+
         try:
             c = self.conn.cursor()
             if variables!=None:
@@ -74,11 +78,15 @@ class DB:
                     rtn.append(RES(*rtno[cur]))
             if self.DEBUG:
                 print(cnt,'rows')
-            c.close()
+
         except Exception as e:
-            rtn=e
-            cnt=-1
             rtype='error'
+            rtn=e
+            cnt=-2
+            
+        if c!=None:
+            c.close()
+
         return rtn,cnt,rtype
 
     def create_list_of_tuple(self,headers=[],data=[],tupletype='Data'):
