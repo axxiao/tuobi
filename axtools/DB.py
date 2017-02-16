@@ -2,7 +2,7 @@
 The DB tools for Sqlite 3
 
 __author__ = "Alex Xiao <http://www.alexxiao.me/>"
-__date__ = "2016-02-08"
+__date__ = "2017-02-08"
 __version__ = "0.5"
 
 """
@@ -12,18 +12,21 @@ import collections
 # to create in memory database use
 #conn = sqlite3.connect(':memory:')
 sqlite3.enable_shared_cache(True)
+
 Column = collections.namedtuple('Column', ['name','type','nullable'])
 Column.__new__.__defaults__ = (False,)
 
 
+
 class DB:
-    def __init__(self,dbname):
+    def __init__(self,dbname,**args):
         self.conn=None
         self.DB_NAME=dbname
         self.DEBUG=True
-        self.conn = sqlite3.connect(self.DB_NAME,uri=True)
+        
+        self.conn = sqlite3.connect(self.DB_NAME,**args)
 
-    def connect(self):
+    def connect(self,**args):
         #file::memory:?cache=shared to open a shared DB
         #global DB_NAME, conn
         if self.conn!=None:
@@ -31,7 +34,7 @@ class DB:
             #TBC
             if self.DEBUG:
                 print('Trying to check beforce connect')
-        self.conn = sqlite3.connect(self.DB_NAME)
+        self.conn = sqlite3.connect(self.DB_NAME,**args)
         
     def disconnect(self):
         self.conn.close()
@@ -45,9 +48,11 @@ class DB:
         Output:
             Result set: [list of named tuple]
             Row  count: Integer
-            Result Type: String data/ cmd
+            Result Type: String data/ cmd/ error
         """   
+
         c=None
+
         try:
             c = self.conn.cursor()
             if variables!=None:
@@ -73,6 +78,7 @@ class DB:
                     rtn.append(RES(*rtno[cur]))
             if self.DEBUG:
                 print(cnt,'rows')
+
         except Exception as e:
             rtype='error'
             rtn=e
@@ -80,6 +86,7 @@ class DB:
             
         if c!=None:
             c.close()
+
         return rtn,cnt,rtype
 
     def create_list_of_tuple(self,headers=[],data=[],tupletype='Data'):
@@ -116,9 +123,9 @@ class DB:
             if not col.nullable:
                 stmt+=' NOT NULL '
         stmt+=')'
-        rtn=run(stmt)
+        rtn=self.run(stmt)
         index_stmt='CREATE INDEX '+tablename+'_main_index ON '+tablename+'(id)'
-        self.run(index_stmt)
+        return self.run(index_stmt)
 
     def insert(self,tablename,headers=[], data=[]):
         """
@@ -147,5 +154,5 @@ class DB:
 
     def select(self,tablename):
         return self.run('select * from '+tablename)
-im_memory_share=DB("file:in_mem_db?mode=memory&cache=shared")
+im_memory_share=DB("file:in_mem_db?mode=memory&cache=shared",uri=True)
 
