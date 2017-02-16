@@ -12,7 +12,8 @@ import collections
 # to create in memory database use
 #conn = sqlite3.connect(':memory:')
 sqlite3.enable_shared_cache(True)
-
+Column = collections.namedtuple('Column', ['name','type','nullable'])
+Column.__new__.__defaults__ = (False,)
 
 
 class DB:
@@ -20,9 +21,6 @@ class DB:
         self.conn=None
         self.DB_NAME=dbname
         self.DEBUG=True
-        self.Column = collections.namedtuple('Column', ['name','type','nullable'])
-        #set column to default nullable to false
-        self.Column.__new__.__defaults__ = (False,)
         self.conn = sqlite3.connect(self.DB_NAME,uri=True)
 
     def connect(self):
@@ -49,31 +47,39 @@ class DB:
             Row  count: Integer
             Result Type: String data/ cmd
         """   
-        c = self.conn.cursor()
-        if variables!=None:
-            c.executemany(cmd,variables)
-        else:
-            c.execute(cmd)   
-        rtn=c.fetchall()
-        cnt=len(rtn)
-        rtype='data'
-        if 'select' not in cmd.lower():
-            self.conn.commit()  
-            cnt=c.rowcount
-            rtype='cmd'
-        else:
-            header=''
-            for colheader in c.description:
-                header+=colheader[0]+' '
-            RES=collections.namedtuple('Data',header.strip())
-            rtno=rtn
-            rtn=[]
-            for cur in range(0,cnt):
-                #convert to namedtuple
-                rtn.append(RES(*rtno[cur]))
-        if self.DEBUG:
-            print(cnt,'rows')
-        c.close()
+        c=None
+        try:
+            c = self.conn.cursor()
+            if variables!=None:
+                c.executemany(cmd,variables)
+            else:
+                c.execute(cmd)   
+            rtn=c.fetchall()
+            cnt=len(rtn)
+            rtype='data'
+            if 'select' not in cmd.lower():
+                self.conn.commit()  
+                cnt=c.rowcount
+                rtype='cmd'
+            else:
+                header=''
+                for colheader in c.description:
+                    header+=colheader[0]+' '
+                RES=collections.namedtuple('Data',header.strip())
+                rtno=rtn
+                rtn=[]
+                for cur in range(0,cnt):
+                    #convert to namedtuple
+                    rtn.append(RES(*rtno[cur]))
+            if self.DEBUG:
+                print(cnt,'rows')
+        except Exception as e:
+            rtype='error'
+            rtn=e
+            cnt=-2
+            
+        if c!=None:
+            c.close()
         return rtn,cnt,rtype
 
     def create_list_of_tuple(self,headers=[],data=[],tupletype='Data'):
