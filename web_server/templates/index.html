@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block head %}
+  
+{% endblock %}
+{% block content %}
+         <h1>The following services are available on this website</h1>
+        {% for service in servicess %}
+            <div><p>{{ service.name }} <b>{{ service.url }}</b></p></div>        
+        {% endfor %}    
+{% endblock %}
+

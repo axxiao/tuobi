@@ -1,0 +1,83 @@
+<html>
+  <head>
+    <title>Alex's webite</title>
+      <STYLE type="text/css">
+          a.hover {text-decoration: none;}
+          a.hover:hover {text-decoration: underline;}
+        </STYLE>
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"
+          rel="stylesheet">
+  <script type=text/javascript>
+    $(function() {
+      $('#username').blur(function() {
+        $.getJSON('/_check_user', {
+          username: $('input[name="username"]').val()
+        }, function(data) {
+          if (data.result=='A'){
+              $("#check_result").text('ADMIN,please provide password');
+              $("#check_result").css('color',data.color);
+              $("#adminpwd").attr('style','display:block');
+              $("#subbutton").val("Sign In")
+          }
+          else if ((data.result=='N')){
+              $("#check_result").text("Welcome Guest, please click on 'Sign in' to continue");
+              $("#check_result").css('color',data.color);
+              $("#passwd").val('PASS');
+              $("#subbutton").val("Sign In")
+          }
+          else
+          {
+              $("#check_result").text(data.result);
+              $("#check_result").css('color',data.color);
+              $("#adminpwd").attr('style','display:none');
+          }
+        });
+        return false;
+      });
+    });
+  </script>
+      {% block head %}
+      {% endblock %}
+  </head>
+  <body>
+    <div>Alex's webite:<a href="/index">Home</a>
+        {% if usertype=='A' %}
+            <a href="/admin">Admin</a>
+        {% endif %} 
+        {% if username %}
+            <a href="/logout">Logout ( {{ username }} )</a>
+        {% else %}            
+            <a href="/login">Login</a>
+        {% endif %}
+        
+      </div>
+    <hr/>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <p>
+        {% for category,message in messages %}
+            <font color='{{ category }}'>+ {{ message }} </font><br/>
+        {% endfor %}
+        </p>
+      {% endif %}
+    {% endwith %}
+    {% if username %}
+      {% block content %}{% endblock %}
+     {% else %}            
+        <h1>Welcome to Alex's website </h1><br/>
+        <form action="" method="post" name="login">
+              {{ form.hidden_tag() }}
+              <p>
+                  Your Full name please:<br/>
+                  {{ form.username(size=20) }}<br>
+              </p>
+            <p><spin id="check_result"></spin></p>
+              <p id="adminpwd" style="display:none" name="adminpwd">                    
+                  {{ form.passwd(size=20) }} </p>
+              <p hidden>{{ form.remember_me_flag }} Remember Me</p>
+              <p><input id="subbutton" type="submit" value="Check"></p>
+         </form>
+    {% endif %}
+  </body>
+</html>

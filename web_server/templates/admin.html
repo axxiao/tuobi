@@ -1,0 +1,82 @@
+<!-- extend from base layout -->
+{% extends "base.html" %}
+
+{% block head %}
+
+<script type=text/javascript>
+    $(function() {
+      $('#updusername').blur(function() {
+        $.getJSON('/_check_upd_user', {
+          username: $('input[name="updusername"]').val()
+        }, function(data) {
+          if (data.result=='N'){
+              $("#check_result_user").text('New user');
+              $("#check_result_user").css('color',data.color);
+              $("#upduserbutton").val("Create New User")
+              $("#removeuserflg_spin").attr('style','display:none');
+              $("#updopttype").val("New");
+          }
+          else
+          {
+              $("#check_result_user").text('Existing User');
+              $("#check_result_user").css('color',data.color);
+              $("#upduserbutton").val("Update Existing User");
+              $("#removeuserflg_spin").attr('style','display:block');
+              $("#updopttype").val("Existing");
+          }
+          data.result
+        });
+        return false;
+      });
+    });
+  </script>    
+<script type=text/javascript>
+    function hidePwd() {
+    if (document.getElementById('updusertype').value=='A') {
+        document.getElementById('updpasswd_spin').style.display = 'block';
+    } else {
+        document.getElementById('updpasswd_spin').style.display = 'none';
+        document.getElementById('updpasswds').value='PASS'
+    }
+    }
+  </script>
+
+{% endblock %}
+
+
+{% block content %}
+  {% if usertype=='A' %}
+    <form action="/admin_user" method="post" name="admin_user">
+        <table style="border:0">
+            <tr><td><p>User Name: </td><td>{{ userform.updusername(size=20) }} <spin id="check_result_user"></spin></td></tr>
+        <tr><td>Uset Type: </td><td>{{ userform.updusertype }} </td></tr>
+        <spin id="updpasswd_spin" hidden ><tr><td>Password: </td><td>{{ userform.updpasswd(size=20) }} </td></tr></spin>
+            <br/><spin id="removeuserflg_spin"  hidden ><tr><td colspan=2><font color="red">DELETE user:</font>{{ userform.upddelflg }}</td></tr></spin>
+        </p>
+        <tr><td colspan=2><input id="upduserbutton" type="submit" value="Check"></td></tr>
+        </table>
+        {{ userform.updopttype }}
+    </form>
+    <script type=text/javascript>
+        sel=document.getElementById('updusertype')
+        sel.onchange=hidePwd
+    </script>
+    <hr/>
+    List of users
+    <table style="border: 1px solid black;">
+        <tr><th style="border: 1px solid black;">User</th>
+            <th style="border: 1px solid black;">Type</th>
+            <th style="border: 1px solid black;">Password Status</th></tr>
+        {% for row in userlist %}
+        <tr>
+            <td style="border: 1px solid black;">{{ row['username'] }}</td>
+            <td style="border: 1px solid black;">{{ row['type'] }}</td>
+            <td style="border: 1px solid black;">{{ row['pwdstatus'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+  {% else %}
+    <font color='red'>You need admin permissions to access this page!</font>
+  {% endif %}
+
+{% endblock %}
