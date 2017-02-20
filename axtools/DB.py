@@ -12,10 +12,8 @@ import collections
 # to create in memory database use
 #conn = sqlite3.connect(':memory:')
 sqlite3.enable_shared_cache(True)
-
 Column = collections.namedtuple('Column', ['name','type','nullable'])
 Column.__new__.__defaults__ = (False,)
-
 
 
 class DB:
@@ -23,7 +21,6 @@ class DB:
         self.conn=None
         self.DB_NAME=dbname
         self.DEBUG=True
-        
         self.conn = sqlite3.connect(self.DB_NAME,**args)
 
     def connect(self,**args):
@@ -50,9 +47,7 @@ class DB:
             Row  count: Integer
             Result Type: String data/ cmd/ error
         """   
-
         c=None
-
         try:
             c = self.conn.cursor()
             if variables!=None:
@@ -78,7 +73,6 @@ class DB:
                     rtn.append(RES(*rtno[cur]))
             if self.DEBUG:
                 print(cnt,'rows')
-
         except Exception as e:
             rtype='error'
             rtn=e
@@ -86,7 +80,6 @@ class DB:
             
         if c!=None:
             c.close()
-
         return rtn,cnt,rtype
 
     def create_list_of_tuple(self,headers=[],data=[],tupletype='Data'):
