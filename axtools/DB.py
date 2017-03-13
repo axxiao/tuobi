@@ -12,18 +12,15 @@ import collections
 # to create in memory database use
 #conn = sqlite3.connect(':memory:')
 sqlite3.enable_shared_cache(True)
-
 Column = collections.namedtuple('Column', ['name','type','nullable'])
 Column.__new__.__defaults__ = (False,)
-
 
 
 class DB:
     def __init__(self,dbname,**args):
         self.conn=None
         self.DB_NAME=dbname
-        self.DEBUG=True
-        
+        self.DEBUG=False
         self.conn = sqlite3.connect(self.DB_NAME,**args)
 
     def connect(self,**args):
@@ -50,9 +47,7 @@ class DB:
             Row  count: Integer
             Result Type: String data/ cmd/ error
         """   
-
         c=None
-
         try:
             c = self.conn.cursor()
             if variables!=None:
@@ -78,7 +73,6 @@ class DB:
                     rtn.append(RES(*rtno[cur]))
             if self.DEBUG:
                 print(cnt,'rows')
-
         except Exception as e:
             rtype='error'
             rtn=e
@@ -86,7 +80,6 @@ class DB:
             
         if c!=None:
             c.close()
-
         return rtn,cnt,rtype
 
     def create_list_of_tuple(self,headers=[],data=[],tupletype='Data'):
@@ -152,7 +145,25 @@ class DB:
         stmt+=')'
         return self.run(stmt, data)
 
-    def select(self,tablename):
-        return self.run('select * from '+tablename)
-im_memory_share=DB("file:in_mem_db?mode=memory&cache=shared",uri=True)
-
+    def select(self,tablename, condition=None):
+        """
+        Run the select
+        
+        Input:
+            tablename: the name of table ( could be joined)
+            condition: conditions after where clause
+        
+        Output:
+            Result set: [list of named tuple]
+            Row  count: Integer
+            Result Type: String data/ cmd/ error 
+        
+        """
+        sql='select * from '+tablename
+        if condition!=None:
+            sql+=' where '+condition
+        return self.run(sql)
+SHARE_PATH="file:in_mem_db?mode=memory&cache=shared"
+im_memory_share=DB(SHARE_PATH,uri=True)
+def get_im_memory_share():
+    return DB(SHARE_PATH,uri=True)
