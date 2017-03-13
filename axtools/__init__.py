@@ -15,16 +15,19 @@ try:
     import IPython    
     jupyter=IPython.get_ipython()
     sys.path.append(os.path.join(jupyter.home_dir,'axtools'))
-    
+    HOME=jupyter.home_dir
     from notebook_extract import JupyterNotebookExtract
     from import_from_file import load_module_extract as load_module  
     #from DB import DB
 except:
     JupyterNotebookExtract=None
     from import_from_file import load_module  
+    HOME=(os.path.abspath('.')).replace('/axtools','')
     pass
 
 DB=load_module('axtools','DB')
-import aws
-cache=DB.im_memory_share
-import tools
+#cache=DB.im_memory_share
+tools=load_module('axtools','tools')
+structures=load_module('axtools','structures')
+aws=load_module('axtools','aws')
+Log=load_module('axtools','Log')
