@@ -98,16 +98,22 @@ class DB:
                 #convert to namedtuple
                 rtn.append(RES(*data[cur]))    
         return rtn
-
-    def create_table(self,tablename,coldef):
+    
+    def create_table(self,tablename,coldef,ignore_if_exist=False):
         """
         The default table creator, it will create table with id as primary which is auto incremental
         Input:
             tablename: the name of the table
             coldef: namedtuple of column definitions, e.g
                 coldef=[Column(name='name',type='text',nullable=True),Column(name='type',type='CHARACTER(1)')]
+            ignore_if_exist: [optional, default to False], if True, will check if the current tables is alreay there with same definition
         Output: N/A
         """
+        if ignore_if_exist:
+            rtn,cod,typ=self.select('sqlite_master',"name='"+tablename+"'")
+            if typ=='data' and cod>0:  #len(rtn)>0:
+                #table alreay exisis
+                return rtn,cod,typ
 
         stmt="create table "+tablename+'(ID INTEGER  PRIMARY KEY AUTOINCREMENT'
         for col in coldef:
@@ -163,7 +169,8 @@ class DB:
         if condition!=None:
             sql+=' where '+condition
         return self.run(sql)
-SHARE_PATH="file:in_mem_db?mode=memory&cache=shared"
+#SHARE_PATH="file:in_mem_db?mode=memory&cache=shared" #this is in memory
+SHARE_PATH='/tmp/shared_DB'
 im_memory_share=DB(SHARE_PATH,uri=True)
 def get_im_memory_share():
     return DB(SHARE_PATH,uri=True)

@@ -153,4 +153,4 @@ def start(dug=False):
     daemon=start_daemon()
 #logger.join()
 #daemon.join()
-
+start(False)
