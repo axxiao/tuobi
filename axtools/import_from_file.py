@@ -45,6 +45,7 @@ def load_module_extract(path,module):
         if DEBUG:
             print('Found change, converting latest',nbfname,'to',pyfname)
         extr.extract(nbfname,pyfname,True)
+    print('Loading',pyfname)
     return load_module(path,module)
             
 def load_module(path,module):
